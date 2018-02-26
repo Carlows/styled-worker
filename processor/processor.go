@@ -10,15 +10,14 @@ import (
 type MessageProcessor struct{}
 
 func (message *MessageProcessor) Process(msg *sqs.Message) error {
+	// The naming of these images need to include the extension of the image url
 	contentURL := *msg.MessageAttributes["contentUrl"].StringValue
-	styleURL := *msg.MessageAttributes["styleUrl"].StringValue
-
 	contentPath, err := utils.DownloadImage("temp", "content.jpg", contentURL)
 	if err != nil {
 		return err
 	}
 
-	// The naming of these images need to include the extension of the image url
+	styleURL := *msg.MessageAttributes["styleUrl"].StringValue
 	stylePath, err := utils.DownloadImage("temp", "style.jpg", styleURL)
 	if err != nil {
 		return err
