@@ -32,3 +32,7 @@
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
   version = "1.13.4"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.2.0"

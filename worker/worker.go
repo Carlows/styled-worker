@@ -25,11 +25,9 @@ func Start(queueUrl *string, h Handler, svc *sqs.SQS) {
 			AttributeNames: aws.StringSlice([]string{
 				"SentTimestamp",
 			}),
-			MaxNumberOfMessages: aws.Int64(10),
-			MessageAttributeNames: aws.StringSlice([]string{
-				"All",
-			}),
-			WaitTimeSeconds: aws.Int64(20),
+			MaxNumberOfMessages:   aws.Int64(10),
+			MessageAttributeNames: aws.StringSlice([]string{"contentUrl", "styleUrl"}),
+			WaitTimeSeconds:       aws.Int64(20),
 		})
 		if err != nil {
 			log.Println(err)

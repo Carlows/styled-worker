@@ -4,27 +4,23 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"time"
-
-	"github.com/carlows/styled-worker/worker"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/carlows/styled-worker/processor"
+	"github.com/carlows/styled-worker/worker"
 )
 
 var flagQueue = flag.String("queueName", "styled-dev-messages", "specify a queue name")
 
-// Print just prints the message from SQS!
-func Print(msg *sqs.Message) error {
-	fmt.Println(*msg)
-	time.Sleep(3 * time.Second)
-	return nil
-}
-
 func main() {
 	flag.Parse()
+
+	// Create temp folder for images
+	_ = os.Mkdir("temp", 0777)
 
 	// Initialize a session in us-west-2 that the SDK will use to load
 	// credentials from the shared credentials file ~/.aws/credentials.
@@ -48,5 +44,6 @@ func main() {
 
 	fmt.Println("Setting up Worker to listen to:", *result.QueueUrl)
 
-	worker.Start(result.QueueUrl, worker.HandlerFunc(Print), svc)
+	p := new(processor.MessageProcessor)
+	worker.Start(result.QueueUrl, worker.HandlerFunc(p.Process), svc)
 }
