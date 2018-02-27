@@ -6,15 +6,20 @@ import (
 	"log"
 	"os"
 
+	"github.com/carlows/styled-worker/utils"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/carlows/styled-worker/processor"
 	"github.com/carlows/styled-worker/worker"
 )
 
 var flagQueue = flag.String("queueName", "styled-dev-messages", "specify a queue name")
+var flagBucket = flag.String("bucketName", "styled-dev-test", "specify a bucket name to upload files to")
+var flagRegion = flag.String("region", "us-west-2", "specify s3 region")
 
 func main() {
 	flag.Parse()
@@ -25,13 +30,15 @@ func main() {
 	// Initialize a session in us-west-2 that the SDK will use to load
 	// credentials from the shared credentials file ~/.aws/credentials.
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-west-2")},
+		Region: aws.String(*flagRegion)},
 	)
 
 	// Create a SQS service client.
-	svc := sqs.New(sess)
+	sqssvc := sqs.New(sess)
+	// Create S3 service client.
+	s3svc := s3.New(sess)
 
-	result, err := svc.GetQueueUrl(&sqs.GetQueueUrlInput{
+	result, err := sqssvc.GetQueueUrl(&sqs.GetQueueUrlInput{
 		QueueName: aws.String(*flagQueue),
 	})
 
@@ -44,6 +51,15 @@ func main() {
 
 	fmt.Println("Setting up Worker to listen to:", *result.QueueUrl)
 
-	p := new(processor.MessageProcessor)
-	worker.Start(result.QueueUrl, worker.HandlerFunc(p.Process), svc)
+	uploader := &utils.FileUploader{
+		S3svc:      s3svc,
+		BucketName: *flagBucket,
+	}
+	processor := &processor.MessageProcessor{
+		FileUploader: uploader,
+		AWSRegion:    *flagRegion,
+		BucketName:   *flagBucket,
+	}
+
+	worker.Start(result.QueueUrl, worker.HandlerFunc(processor.Process), sqssvc)
 }

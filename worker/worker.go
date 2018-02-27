@@ -26,7 +26,7 @@ func Start(queueUrl *string, h Handler, svc *sqs.SQS) {
 				"SentTimestamp",
 			}),
 			MaxNumberOfMessages:   aws.Int64(10),
-			MessageAttributeNames: aws.StringSlice([]string{"contentUrl", "styleUrl"}),
+			MessageAttributeNames: aws.StringSlice([]string{"contentUrl", "styleUrl", "recordId"}),
 			WaitTimeSeconds:       aws.Int64(20),
 		})
 		if err != nil {
@@ -57,7 +57,7 @@ func run(queueUrl *string, h Handler, messages []*sqs.Message, svc *sqs.SQS) {
 func handleMessage(queueUrl *string, m *sqs.Message, h Handler, svc *sqs.SQS) error {
 	err := h.HandleMessage(m)
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 
 	_, delErr := svc.DeleteMessage(&sqs.DeleteMessageInput{

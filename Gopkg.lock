@@ -26,7 +26,9 @@
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
+    "private/protocol/restxml",
     "private/protocol/xml/xmlutil",
+    "service/s3",
     "service/sqs",
     "service/sts"
   ]
@@ -53,6 +55,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "24bfe034c47773e88535dc289116c9886bf26794b92158755acb7796c1f27f3d"
+  inputs-digest = "e872a9d47c56e835e7024bc9fc328f8874131f9df62246ab5d6ae0fdc6dc383b"
   solver-name = "gps-cdcl"
   solver-version = 1
