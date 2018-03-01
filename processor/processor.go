@@ -3,6 +3,7 @@ package processor
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os/exec"
 	"regexp"
 
@@ -44,6 +45,7 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 	resultPath := fmt.Sprintf("temp/%s", resultFileName)
 	output, err := message.runCommand(contentPath, stylePath, resultPath)
 	if err != nil {
+		log.Fatalln(err, output)
 		return err
 	}
 
@@ -82,10 +84,7 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 }
 
 func (message *MessageProcessor) runCommand(contentPath string, stylePath string, resultPath string) (output []byte, err error) {
-	contentParam := fmt.Sprintf("--content_image_path %s", contentPath)
-	styleParam := fmt.Sprintf("--style_image_path %s", stylePath)
-	outputParam := fmt.Sprintf("--output_image_path %s", resultPath)
-	return exec.Command("python", message.ProgramPath, contentParam, styleParam, outputParam).Output()
+	return exec.Command("python", message.ProgramPath, "--content_image_path", contentPath, "--style_image_path", stylePath, "--output_image_path", resultPath).Output()
 }
 
 func (message *MessageProcessor) parseCmdOutput(cmdOutput string) (match bool, err error) {
