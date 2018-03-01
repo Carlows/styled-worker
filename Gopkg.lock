@@ -23,11 +23,14 @@
     "internal/sdkrand",
     "internal/shareddefaults",
     "private/protocol",
+    "private/protocol/json/jsonutil",
+    "private/protocol/jsonrpc",
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
     "private/protocol/restxml",
     "private/protocol/xml/xmlutil",
+    "service/dynamodb",
     "service/s3",
     "service/sqs",
     "service/sts"
@@ -55,6 +58,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e872a9d47c56e835e7024bc9fc328f8874131f9df62246ab5d6ae0fdc6dc383b"
+  inputs-digest = "6890f6946dddc85ab568462e8de99699f120301972a9206c75704d447f036498"
   solver-name = "gps-cdcl"
   solver-version = 1

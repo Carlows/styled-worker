@@ -14,13 +14,15 @@ type MessageProcessor struct {
 	FileUploader *utils.FileUploader
 	AWSRegion    string
 	BucketName   string
+	DB           *utils.DB
 }
 
 func (message *MessageProcessor) Process(msg *sqs.Message) error {
 	contentURLAttrib, hasContentURL := msg.MessageAttributes["contentUrl"]
 	styleURLAttrib, hasStyleURL := msg.MessageAttributes["styleUrl"]
+	recordIDAttrib, hasRecordID := msg.MessageAttributes["recordId"]
 
-	if !hasContentURL || !hasStyleURL {
+	if !hasContentURL || !hasStyleURL || !hasRecordID {
 		return errors.New("SQS Message has no content or style urls")
 	}
 
@@ -44,25 +46,36 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 		return err
 	}
 
+	// clean up all files after this function is done
+	defer utils.CleanUpFiles([]string{contentPath, stylePath, resultPath})
+
 	cmdOutput := string(output)
 	success, err := message.parseCmdOutput(cmdOutput)
 	if err != nil {
 		return err
 	}
 
-	// recordId := *msg.MessageAttributes["recordId"].StringValue
-	if success {
-		key, err := message.FileUploader.UploadFileToS3(resultPath, resultFileName)
+	recordID := *recordIDAttrib.StringValue
+
+	// The record failed to update. Let's update the item with an error
+	if !success {
+		_, err = message.DB.UpdateRecordFailure(recordID)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("File uploaded %s", message.buildS3URL(key))
-		// update DynamoDB record with success message
-	} else {
-		// update DynamoDB record with error message
 	}
 
-	// TODO: cleanup of temp folder
+	key, err := message.FileUploader.UploadFileToS3(resultPath, resultFileName)
+	if err != nil {
+		return err
+	}
+
+	_, err = message.DB.UpdateRecordSuccess(recordID, message.buildS3URL(key))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Sucessfully Updated Item %s", message.buildS3URL(key))
 
 	return nil
 }
