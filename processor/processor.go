@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -83,8 +84,18 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 	return nil
 }
 
-func (message *MessageProcessor) runCommand(contentPath string, stylePath string, resultPath string) (output []byte, err error) {
-	return exec.Command("python", message.ProgramPath, "--content_image_path", contentPath, "--style_image_path", stylePath, "--output_image_path", resultPath).Output()
+func (message *MessageProcessor) runCommand(contentPath string, stylePath string, resultPath string) ([]byte, error) {
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+
+	cmd := exec.Command("python", message.ProgramPath, "--content_image_path", contentPath, "--style_image_path", stylePath, "--output_image_path", resultPath)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	result, err := cmd.Output()
+	fmt.Println(out, stderr)
+
+	return result, err
 }
 
 func (message *MessageProcessor) parseCmdOutput(cmdOutput string) (match bool, err error) {
