@@ -45,7 +45,7 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 	resultPath := fmt.Sprintf("temp/%s", resultFileName)
 	output, err := message.runCommand(contentPath, stylePath, resultPath)
 	if err != nil {
-		log.Fatalln(err, output)
+		log.Println(err, output)
 		return err
 	}
 
