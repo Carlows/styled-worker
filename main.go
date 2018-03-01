@@ -22,6 +22,7 @@ var flagQueue = flag.String("queueName", "styled-dev-messages", "specify a queue
 var flagBucket = flag.String("bucketName", "styled-dev-test", "specify a bucket name to upload files to")
 var flagRegion = flag.String("region", "us-west-2", "specify s3 region")
 var flagRecordsTable = flag.String("tableName", "styled-dev", "specify dynamodb table")
+var flagProgramPath = flag.String("programPath", "demo.py", "specify path for python demo")
 
 func main() {
 	flag.Parse()
@@ -68,6 +69,7 @@ func main() {
 		AWSRegion:    *flagRegion,
 		BucketName:   *flagBucket,
 		DB:           db,
+		ProgramPath:  *flagProgramPath,
 	}
 
 	worker.Start(result.QueueUrl, worker.HandlerFunc(processor.Process), sqssvc)
