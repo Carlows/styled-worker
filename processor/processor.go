@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"os/exec"
 	"regexp"
 
@@ -44,14 +43,14 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 
 	resultFileName := "result.png"
 	resultPath := fmt.Sprintf("temp/%s", resultFileName)
-	output, err := message.runCommand(contentPath, stylePath, resultPath)
-	if err != nil {
-		log.Println(err, output)
-		return err
-	}
 
 	// clean up all files after this function is done
 	defer utils.CleanUpFiles([]string{contentPath, stylePath, resultPath})
+
+	output, err := message.runCommand(contentPath, stylePath, resultPath)
+	if err != nil {
+		return err
+	}
 
 	cmdOutput := string(output)
 	success, err := message.parseCmdOutput(cmdOutput)
@@ -84,7 +83,7 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 	return nil
 }
 
-func (message *MessageProcessor) runCommand(contentPath string, stylePath string, resultPath string) ([]byte, error) {
+func (message *MessageProcessor) runCommand(contentPath string, stylePath string, resultPath string) (string, error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 
@@ -92,10 +91,10 @@ func (message *MessageProcessor) runCommand(contentPath string, stylePath string
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 
-	result, err := cmd.Output()
-	fmt.Println(out, stderr)
+	err := cmd.Run()
+	fmt.Println(out.String(), stderr.String())
 
-	return result, err
+	return out.String(), err
 }
 
 func (message *MessageProcessor) parseCmdOutput(cmdOutput string) (match bool, err error) {
