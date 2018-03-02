@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/carlows/styled-worker/utils"
 )
 
 type HandlerFunc func(msg *sqs.Message) error
@@ -30,7 +31,7 @@ func Start(queueUrl *string, h Handler, svc *sqs.SQS) {
 			WaitTimeSeconds:       aws.Int64(20),
 		})
 		if err != nil {
-			log.Println(err)
+			utils.LogError(err)
 			continue
 		}
 
@@ -45,30 +46,29 @@ func Start(queueUrl *string, h Handler, svc *sqs.SQS) {
 
 func run(queueUrl *string, h Handler, messages []*sqs.Message, svc *sqs.SQS) {
 	numMessages := len(messages)
-	log.Printf("worker: Processing %d messages", numMessages)
+	log.Println("worker: Processing %d messages", numMessages)
 
 	for _, message := range messages {
 		if err := handleMessage(queueUrl, message, h, svc); err != nil {
-			log.Println(err)
+			utils.LogError(err)
 		}
 	}
 }
 
 func handleMessage(queueUrl *string, m *sqs.Message, h Handler, svc *sqs.SQS) error {
-	err := h.HandleMessage(m)
-	if err != nil {
-		log.Println(err)
+	if err := h.HandleMessage(m); err != nil {
+		utils.LogError(err)
 	}
 
-	_, delErr := svc.DeleteMessage(&sqs.DeleteMessageInput{
+	_, err := svc.DeleteMessage(&sqs.DeleteMessageInput{
 		QueueUrl:      queueUrl,
 		ReceiptHandle: m.ReceiptHandle,
 	})
 
-	if delErr != nil {
+	if err != nil {
 		// Stop everything if we cannot keep deleting messages
 		// Otherwise we will keep processing the same messages over and over
-		log.Fatal(err)
+		utils.LogErrorAndDie(err)
 	}
 
 	return nil

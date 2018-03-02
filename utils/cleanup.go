@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"os"
 )
 
@@ -10,7 +9,7 @@ func CleanUpFiles(filePaths []string) {
 		if _, err := os.Stat(filePath); err == nil {
 			err := os.Remove(filePath)
 			if err != nil {
-				log.Fatal(err)
+				LogErrorAndDie(err)
 			}
 		}
 	}

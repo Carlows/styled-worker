@@ -41,6 +41,8 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 		return err
 	}
 
+	fmt.Println("Downloaded both images successfully...")
+
 	resultFileName := "result.png"
 	resultPath := fmt.Sprintf("temp/%s", resultFileName)
 
@@ -52,6 +54,8 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 		return err
 	}
 
+	fmt.Println("Parsing result output from FastPhotoStyled...")
+
 	cmdOutput := string(output)
 	success, err := message.parseCmdOutput(cmdOutput)
 	if err != nil {
@@ -62,6 +66,7 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 
 	// The record failed to update. Let's update the item with an error
 	if !success {
+		fmt.Println("Failed to style images, updating record with failure")
 		_, err = message.DB.UpdateRecordFailure(recordID)
 		if err != nil {
 			return err
@@ -73,12 +78,14 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 		return err
 	}
 
+	fmt.Println("Styling successful! Image was uploaded to S3...")
+
 	_, err = message.DB.UpdateRecordSuccess(recordID, message.buildS3URL(key))
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Sucessfully Updated Item %s", message.buildS3URL(key))
+	fmt.Printf("Sucessfully Updated Item %s\n", message.buildS3URL(key))
 
 	return nil
 }
@@ -92,6 +99,11 @@ func (message *MessageProcessor) runCommand(contentPath string, stylePath string
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
+
+	if stderr.String() != "" {
+		utils.LogError(errors.New(stderr.String()))
+	}
+
 	fmt.Println(out.String(), stderr.String())
 
 	return out.String(), err

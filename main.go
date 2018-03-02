@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/carlows/styled-worker/utils"
+	raven "github.com/getsentry/raven-go"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -25,6 +25,9 @@ var flagRecordsTable = flag.String("tableName", "styled-dev", "specify dynamodb 
 var flagProgramPath = flag.String("programPath", "demo.py", "specify path for python demo")
 
 func main() {
+	// Configure Raven
+	raven.SetDSN("https://e724268551344494aeec3cbf310a23a2:cde51d041ae54fc4941f97c2cb08fd62@sentry.io/297039")
+
 	flag.Parse()
 
 	// Create temp folder for images
@@ -48,9 +51,7 @@ func main() {
 	})
 
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == sqs.ErrCodeQueueDoesNotExist {
-			log.Fatal("Unable to find queue %q.", *flagQueue)
-		}
+		raven.CaptureErrorAndWait(err, nil)
 		log.Fatal("Unable to queue %q, %v.", *flagQueue, err)
 	}
 
