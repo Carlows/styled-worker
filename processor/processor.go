@@ -67,10 +67,11 @@ func (message *MessageProcessor) Process(msg *sqs.Message) error {
 	// The record failed to update. Let's update the item with an error
 	if !success {
 		fmt.Println("Failed to style images, updating record with failure")
-		_, err = message.DB.UpdateRecordFailure(recordID)
-		if err != nil {
+		if _, err = message.DB.UpdateRecordFailure(recordID); err != nil {
 			return err
 		}
+
+		return nil
 	}
 
 	key, err := message.FileUploader.UploadFileToS3(resultPath, resultFileName)
