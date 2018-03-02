@@ -46,7 +46,7 @@ func Start(queueUrl *string, h Handler, svc *sqs.SQS) {
 
 func run(queueUrl *string, h Handler, messages []*sqs.Message, svc *sqs.SQS) {
 	numMessages := len(messages)
-	log.Println("worker: Processing %d messages", numMessages)
+	log.Printf("worker: Processing %d messages", numMessages)
 
 	for _, message := range messages {
 		if err := handleMessage(queueUrl, message, h, svc); err != nil {
